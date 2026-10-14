@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuizCertify - Result</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background: #f4f7fb;
+            padding: 40px 15px;
+        }
+
+        .result-card {
+            background: white;
+            max-width: 500px;
+            margin: auto;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        .score {
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        a {
+            display: inline-block;
+            margin: 10px 5px;
+            background: #173b70;
+            color: white;
+            padding: 12px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+
+        .success {
+            color: green;
+        }
+
+        .error {
+            color: red;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="result-card">
+        <h1>Quiz Result</h1>
+
+        <h2>Hello, {{ name }}!</h2>
+
+        <p class="score">
+            Your Score: {{ score }} / {{ total }}
+        </p>
+
+        {% if passed %}
+            <h2 class="success">
+                Congratulations! You Passed.
+            </h2>
+
+            <p>You are eligible for a certificate.</p>
+
+            {% if certificate %}
+                <p><strong>Certificate ID:</strong></p>
+                <p>{{ certificate.certificate_id }}</p>
+            {% endif %}
+
+            {% if email_sent %}
+                <p class="success">
+                    Certificate email sent successfully!
+                    Please check your inbox and spam folder.
+                </p>
+            {% elif email_error %}
+                <p class="error">
+                    Your certificate could not be emailed.
+                    Please check the email address or contact
+                    the administrator.
+                </p>
+            {% else %}
+                <p class="error">
+                    Your certificate email has not been
+                    confirmed as sent. Please contact
+                    the administrator.
+                </p>
+            {% endif %}
+
+        {% else %}
+            <h2 class="error">Sorry, You Failed.</h2>
+
+            <p>You need at least 7 marks to pass.</p>
+            <p>Keep practising. You can try again!</p>
+        {% endif %}
+
+        <br>
+        <a href="{% url 'quiz_home' %}">Try Again</a>
+    </div>
+</body>
+</html>
+

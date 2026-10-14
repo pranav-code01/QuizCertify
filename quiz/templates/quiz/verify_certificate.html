@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <title>Certificate Verification</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f0f4f8;
+            text-align: center;
+            padding: 50px 15px;
+        }
+        .certificate {
+            background: white;
+            max-width: 550px;
+            margin: auto;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #167d4a;
+        }
+        p {
+            font-size: 16px;
+            margin: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="certificate">
+        <h1>✓ Certificate Verified</h1>
+        <p>This certificate is valid.</p>
+
+
+    <hr>
+
+    <p><strong>Name:</strong> {{ certificate.name }}</p>
+    <p><strong>Score:</strong> {{ certificate.score }}/10</p>
+    <p><strong>Certificate ID:</strong></p>
+    <p>{{ certificate.certificate_id }}</p>
+    <p><strong>Issued At:</strong> {{ certificate.issued_at }}</p>
+</div>
+
+
+</body>
+</html>

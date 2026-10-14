@@ -1,0 +1,200 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuizCertify</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f7fb;
+            margin: 0;
+            padding: 30px 15px;
+        }
+
+        .container {
+            max-width: 700px;
+            margin: auto;
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+        }
+
+        h1, h2 {
+            text-align: center;
+            color: #173b70;
+        }
+
+        label {
+            display: block;
+            margin-top: 15px;
+            font-weight: bold;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="tel"] {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 12px;
+            margin-top: 7px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+        }
+
+        .question {
+            margin: 22px 0;
+            padding: 15px;
+            background: #f4f7fb;
+            border-radius: 8px;
+        }
+
+        .option {
+            display: block;
+            margin: 12px 0;
+            font-weight: normal;
+        }
+
+        button {
+            background: #173b70;
+            color: white;
+            padding: 12px 22px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        button:hover {
+            background: #24549a;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .error {
+            color: red;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+<div class="container">
+
+    <h1>QuizCertify</h1>
+    <p style="text-align:center;">Python MCQ Quiz</p>
+
+    {% if error %}
+        <p class="error">{{ error }}</p>
+    {% endif %}
+
+    <form method="POST" action="{% url 'submit_quiz' %}"
+          onsubmit="return validateQuiz()">
+        {% csrf_token %}
+
+        <!-- STEP 1: STUDENT DETAILS -->
+        <div id="student-details">
+            <h2>Student Details</h2>
+
+            <label for="name">Full Name</label>
+            <input type="text" id="name" name="name"
+                   placeholder="Enter your full name" required>
+
+            <label for="mobile">Mobile Number</label>
+            <input type="tel" id="mobile" name="mobile"
+                   placeholder="Enter mobile number"
+                   pattern="[0-9]{10}"
+                   maxlength="10" minlength="10" required>
+
+            <label for="email">Email Address</label>
+            <input type="email" id="email" name="email"
+                   placeholder="Enter your email" required>
+
+            <button type="button" onclick="showQuestions()">
+                Next
+            </button>
+        </div>
+
+        <!-- STEP 2: QUESTIONS -->
+        <div id="quiz-questions" class="hidden">
+            <h2>Python MCQ Questions</h2>
+
+            {% for question in questions %}
+                <div class="question">
+                    <p><strong>{{ forloop.counter }}. {{ question.question_text }}</strong></p>
+
+                    <label class="option">
+                        <input type="radio" name="question_{{ question.id }}"
+                               value="A" required>
+                        {{ question.option_a }}
+                    </label>
+
+                    <label class="option">
+                        <input type="radio" name="question_{{ question.id }}"
+                               value="B">
+                        {{ question.option_b }}
+                    </label>
+
+                    <label class="option">
+                        <input type="radio" name="question_{{ question.id }}"
+                               value="C">
+                        {{ question.option_c }}
+                    </label>
+
+                    <label class="option">
+                        <input type="radio" name="question_{{ question.id }}"
+                               value="D">
+                        {{ question.option_d }}
+                    </label>
+                </div>
+            {% endfor %}
+
+            <button type="button" onclick="goBack()">Back</button>
+            <button type="submit">Submit Quiz</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    function showQuestions() {
+        const name = document.getElementById("name");
+        const mobile = document.getElementById("mobile");
+        const email = document.getElementById("email");
+
+        if (!name.reportValidity()) return;
+        if (!mobile.reportValidity()) return;
+        if (!email.reportValidity()) return;
+
+        document.getElementById("student-details").classList.add("hidden");
+        document.getElementById("quiz-questions").classList.remove("hidden");
+
+        window.scrollTo(0, 0);
+    }
+
+    function goBack() {
+        document.getElementById("quiz-questions").classList.add("hidden");
+        document.getElementById("student-details").classList.remove("hidden");
+        window.scrollTo(0, 0);
+    }
+
+    function validateQuiz() {
+        const questions = document.querySelectorAll(".question");
+
+        for (const question of questions) {
+            if (!question.querySelector('input[type="radio"]:checked')) {
+                alert("Please answer all questions before submitting.");
+                question.scrollIntoView({ behavior: "smooth", block: "center" });
+                return false;
+            }
+        }
+
+        return true;
+    }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,305 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuizCertify - Admin Dashboard</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f3f5f9;
+            color: #1f2937;
+        }
+
+        header {
+            background: #172554;
+            color: white;
+            padding: 22px 30px;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 26px;
+        }
+
+        header p {
+            margin: 8px 0 0;
+            color: #cbd5e1;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 22px;
+        }
+
+        .topbar h2 {
+            margin: 0;
+        }
+
+        .button {
+            display: inline-block;
+            padding: 11px 16px;
+            background: #2563eb;
+            color: white;
+            text-decoration: none;
+            border-radius: 7px;
+            font-size: 14px;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 18px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            padding: 22px;
+            border-radius: 12px;
+            box-shadow: 0 3px 12px #0000000a;
+            border-top: 4px solid #2563eb;
+        }
+
+        .card p {
+            margin: 0 0 12px;
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        .card h3 {
+            margin: 0;
+            font-size: 30px;
+        }
+
+        .pass {
+            border-top-color: #16a34a;
+        }
+
+        .fail {
+            border-top-color: #dc2626;
+        }
+
+        .cert {
+            border-top-color: #9333ea;
+        }
+
+        .table-box {
+            background: white;
+            border-radius: 12px;
+            padding: 22px;
+            box-shadow: 0 3px 12px #0000000a;
+            overflow-x: auto;
+        }
+
+        .table-box h2 {
+            margin-top: 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 750px;
+        }
+
+        th, td {
+            padding: 13px 12px;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: 14px;
+        }
+
+        th {
+            background: #f8fafc;
+            color: #475569;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .passed {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .failed {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .sent {
+            color: #166534;
+        }
+
+        .not-sent {
+            color: #b45309;
+        }
+
+        .empty {
+            text-align: center;
+            color: #64748b;
+            padding: 25px;
+        }
+
+        footer {
+            text-align: center;
+            padding: 25px;
+            color: #64748b;
+            font-size: 13px;
+        }
+
+        @media (max-width: 850px) {
+            .cards {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 480px) {
+            .cards {
+                grid-template-columns: 1fr;
+            }
+
+            header {
+                padding: 20px;
+            }
+
+            .container {
+                padding: 0 12px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>QuizCertify</h1>
+    <p>Admin Dashboard | Python Quiz Management</p>
+</header>
+
+<div class="container">
+
+    <div class="topbar">
+        <div>
+            <h2>Dashboard Overview</h2>
+            <p>Quiz attempts and certificate summary</p>
+        </div>
+
+        <a class="button" href="/admin/">
+            Open Django Admin
+        </a>
+    </div>
+
+    <div class="cards">
+
+        <div class="card">
+            <p>Total Quiz Attempts</p>
+            <h3>{{ total_attempts }}</h3>
+        </div>
+
+        <div class="card pass">
+            <p>Students Passed</p>
+            <h3>{{ passed_count }}</h3>
+        </div>
+
+        <div class="card fail">
+            <p>Students Failed</p>
+            <h3>{{ failed_count }}</h3>
+        </div>
+
+        <div class="card cert">
+            <p>Certificates Issued</p>
+            <h3>{{ total_certificates }}</h3>
+        </div>
+
+    </div>
+
+    <div class="table-box">
+        <h2>Recent Quiz Attempts</h2>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Mobile</th>
+                    <th>Score</th>
+                    <th>Result</th>
+                    <th>Email Status</th>
+                    <th>Attempted At</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for attempt in recent_attempts %}
+                <tr>
+                    <td>{{ attempt.name }}</td>
+                    <td>{{ attempt.email }}</td>
+                    <td>{{ attempt.mobile }}</td>
+
+                    <td>
+                        {{ attempt.score }}/{{ attempt.total_questions }}
+                    </td>
+
+                    <td>
+                        {% if attempt.passed %}
+                        <span class="status passed">PASS</span>
+                        {% else %}
+                        <span class="status failed">FAIL</span>
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        {% if attempt.email_sent %}
+                        <span class="sent">Sent</span>
+                        {% elif attempt.passed %}
+                        <span class="not-sent">Not sent</span>
+                        {% else %}
+                        <span>Not applicable</span>
+                        {% endif %}
+                    </td>
+
+                    <td>{{ attempt.attempted_at|date:"d M Y, h:i A" }}</td>
+                </tr>
+
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="empty">
+                        No quiz attempts recorded yet.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+<footer>
+    QuizCertify &copy; 2026 | Admin Dashboard
+</footer>
+
+</body>
+</html>
