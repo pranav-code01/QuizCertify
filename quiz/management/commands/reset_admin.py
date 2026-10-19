@@ -6,7 +6,7 @@ from django.contrib.auth import get_user_model
 
 
 class Command(BaseCommand):
-    help = "Reset an existing admin password using an environment variable"
+    help = "Create an admin user or reset an existing admin password"
 
     def handle(self, *args, **options):
         username = os.environ.get("DJANGO_ADMIN_USERNAME")
@@ -20,16 +20,26 @@ class Command(BaseCommand):
 
         User = get_user_model()
 
-        try:
-            user = User.objects.get(username=username)
-        except User.DoesNotExist:
-            raise CommandError(
-                f"Admin username '{username}' was not found."
-            )
-
-        user.set_password(password)
-        user.save(update_fields=["password"])
-
-        self.stdout.write(
-            self.style.SUCCESS("Admin password reset successfully.")
+        user, created = User.objects.get_or_create(
+            username=username,
+            defaults={
+                "is_staff": True,
+                "is_superuser": True,
+                "is_active": True,
+            },
         )
+
+        user.is_staff = True
+        user.is_superuser = True
+        user.is_active = True
+        user.set_password(password)
+        user.save()
+
+        if created:
+            self.stdout.write(
+                self.style.SUCCESS("Admin user created successfully.")
+            )
+        else:
+            self.stdout.write(
+                self.style.SUCCESS("Admin password reset successfully.")
+            )
