@@ -1,0 +1,122 @@
+[
+{
+  "model": "quiz.question",
+  "pk": 1,
+  "fields": {
+    "question_text": "What is the output of print(2 + 3)?",
+    "option_a": "23",
+    "option_b": "5",
+    "option_c": "2+3",
+    "option_d": "ERROR",
+    "correct_option": "B"
+  }
+},
+{
+  "model": "quiz.question",
+  "pk": 2,
+  "fields": {
+    "question_text": "Which keyword defines a function in Python?",
+    "option_a": "function",
+    "option_b": "define",
+    "option_c": "def",
+    "option_d": "fun",
+    "correct_option": "C"
+  }
+},
+{
+  "model": "quiz.question",
+  "pk": 3,
+  "fields": {
+    "question_text": "Which data type stores True or False?",
+    "option_a": "int",
+    "option_b": "bool",
+    "option_c": "str",
+    "option_d": "list",
+    "correct_option": "B"
+  }
+},
+{
+  "model": "quiz.question",
+  "pk": 4,
+  "fields": {
+    "question_text": "Which symbol starts a comment in Python?",
+    "option_a": "//",
+    "option_b": "<!--",
+    "option_c": "#",
+    "option_d": "**",
+    "correct_option": "C"
+  }
+},
+{
+  "model": "quiz.question",
+  "pk": 5,
+  "fields": {
+    "question_text": "Which function displays output in Python?",
+    "option_a": "input()",
+    "option_b": "print()",
+    "option_c": "show()",
+    "option_d": "display()",
+    "correct_option": "B"
+  }
+},
+{
+  "model": "quiz.question",
+  "pk": 6,
+  "fields": {
+    "question_text": "Which brackets are used to create a list?",
+    "option_a": "()",
+    "option_b": "{}",
+    "option_c": "[]",
+    "option_d": "<>",
+    "correct_option": "C"
+  }
+},
+{
+  "model": "quiz.question",
+  "pk": 7,
+  "fields": {
+    "question_text": "Which operator is used for exponentiation?",
+    "option_a": "*",
+    "option_b": "**",
+    "option_c": "//",
+    "option_d": "%",
+    "correct_option": "B"
+  }
+},
+{
+  "model": "quiz.question",
+  "pk": 8,
+  "fields": {
+    "question_text": "Which keyword is used for a conditional statement?",
+    "option_a": "if",
+    "option_b": "for",
+    "option_c": "def",
+    "option_d": "import",
+    "correct_option": "A"
+  }
+},
+{
+  "model": "quiz.question",
+  "pk": 9,
+  "fields": {
+    "question_text": "Which method adds an item to the end of a list?",
+    "option_a": "add()",
+    "option_b": "insert_end()",
+    "option_c": "append()",
+    "option_d": "push()",
+    "correct_option": "C"
+  }
+},
+{
+  "model": "quiz.question",
+  "pk": 10,
+  "fields": {
+    "question_text": "Which function returns the length of a list?",
+    "option_a": "size()",
+    "option_b": "count()",
+    "option_c": "range()",
+    "option_d": "len()",
+    "correct_option": "D"
+  }
+}
+]
