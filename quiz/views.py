@@ -230,7 +230,7 @@ def submit_quiz(request):
                 "application/pdf",
             )
 
-            email_message.send(fail_silently=False)
+            email_message.send(fail_silently=True)
             email_sent = True
 
             attempt.email_sent = True
