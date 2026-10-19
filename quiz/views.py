@@ -1,5 +1,7 @@
 ﻿
 import io
+import logging
+
 import qrcode
 
 from reportlab.pdfgen import canvas
@@ -14,6 +16,9 @@ from django.conf import settings
 from django.contrib.auth.decorators import user_passes_test
 
 from .models import Question, Certificate, QuizAttempt
+
+
+logger = logging.getLogger(__name__)
 
 
 def quiz_home(request):
@@ -230,15 +235,31 @@ def submit_quiz(request):
                 "application/pdf",
             )
 
-            email_message.send(fail_silently=True)
-            email_sent = True
+            sent_count = email_message.send(
+                fail_silently=False
+            )
 
-            attempt.email_sent = True
-            attempt.save(update_fields=['email_sent'])
+            email_sent = (sent_count == 1)
 
-        except Exception as error:
-            print("Certificate email error:", error)
+            if email_sent:
+                attempt.email_sent = True
+                attempt.save(update_fields=['email_sent'])
+            else:
+                email_error = True
+                logger.error(
+                    "Certificate email was not accepted by "
+                    "the email backend. Attempt ID: %s",
+                    attempt.pk
+                )
+
+        except Exception:
+            email_sent = False
             email_error = True
+
+            logger.exception(
+                "Certificate email failed. Attempt ID: %s",
+                attempt.pk
+            )
 
     return render(request, 'quiz/result.html', {
         'name': name,
