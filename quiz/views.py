@@ -1,6 +1,8 @@
 ﻿
 import io
 import logging
+import base64
+import requests
 
 import qrcode
 
@@ -11,7 +13,6 @@ from django.shortcuts import render
 from django.views.decorators.http import require_POST
 from django.http import HttpResponse
 from django.urls import reverse
-from django.core.mail import EmailMessage
 from django.conf import settings
 from django.contrib.auth.decorators import user_passes_test
 
@@ -33,15 +34,8 @@ def quiz_home(request):
 @user_passes_test(lambda user: user.is_staff)
 def dashboard(request):
     total_attempts = QuizAttempt.objects.count()
-
-    passed_count = QuizAttempt.objects.filter(
-        passed=True
-    ).count()
-
-    failed_count = QuizAttempt.objects.filter(
-        passed=False
-    ).count()
-
+    passed_count = QuizAttempt.objects.filter(passed=True).count()
+    failed_count = QuizAttempt.objects.filter(passed=False).count()
     total_certificates = Certificate.objects.count()
 
     recent_attempts = QuizAttempt.objects.order_by(
@@ -56,11 +50,7 @@ def dashboard(request):
         'recent_attempts': recent_attempts,
     }
 
-    return render(
-        request,
-        'quiz/dashboard.html',
-        context
-    )
+    return render(request, 'quiz/dashboard.html', context)
 
 
 def generate_certificate_pdf(certificate, request):
@@ -83,16 +73,13 @@ def generate_certificate_pdf(certificate, request):
     )
 
     pdf.setFont("Helvetica-Bold", 22)
-    pdf.drawCentredString(
-        297, 645, certificate.name
-    )
+    pdf.drawCentredString(297, 645, certificate.name)
 
     pdf.setFont("Helvetica", 13)
     pdf.drawCentredString(
         297, 600,
         "For successfully completing the Python Quiz"
     )
-
     pdf.drawCentredString(
         297, 570,
         f"Score: {certificate.score}/10"
@@ -130,13 +117,85 @@ def generate_certificate_pdf(certificate, request):
         buffer.getvalue(),
         content_type='application/pdf'
     )
-
     response['Content-Disposition'] = (
         f'attachment; filename="certificate_'
         f'{certificate.certificate_id}.pdf"'
     )
 
     return response
+
+
+def send_certificate_email(certificate, request, total):
+    """
+    Send the certificate PDF using the Brevo transactional email API.
+    The API key and verified sender email must be configured in Render.
+    """
+    api_key = getattr(settings, 'BREVO_API_KEY', '')
+    sender_email = getattr(settings, 'DEFAULT_FROM_EMAIL', '')
+
+    if not api_key or not sender_email:
+        raise ValueError(
+            "Brevo API key or sender email is not configured."
+        )
+
+    pdf_response = generate_certificate_pdf(certificate, request)
+
+    pdf_base64 = base64.b64encode(
+        pdf_response.content
+    ).decode('utf-8')
+
+    payload = {
+        "sender": {
+            "name": "QuizCertify",
+            "email": sender_email,
+        },
+        "to": [
+            {
+                "email": certificate.email,
+                "name": certificate.name,
+            }
+        ],
+        "subject": "Your Python Quiz Certificate",
+        "textContent": (
+            f"Hello {certificate.name},\n\n"
+            "Congratulations! You have passed the Python Quiz.\n"
+            f"Your score is {certificate.score}/{total}.\n"
+            "Your certificate PDF is attached to this email.\n\n"
+            "Thank you!\nQuizCertify"
+        ),
+        "attachment": [
+            {
+                "name": (
+                    f"certificate_{certificate.certificate_id}.pdf"
+                ),
+                "content": pdf_base64,
+            }
+        ],
+    }
+
+    response = requests.post(
+        "https://api.brevo.com/v3/smtp/email",
+        headers={
+            "accept": "application/json",
+            "api-key": api_key,
+            "content-type": "application/json",
+        },
+        json=payload,
+        timeout=20,
+    )
+
+    if response.status_code not in (200, 201, 202):
+        logger.error(
+            "Brevo email API error: status=%s body=%s",
+            response.status_code,
+            response.text[:1000],
+        )
+        response.raise_for_status()
+        raise RuntimeError(
+            f"Brevo email API returned status {response.status_code}"
+        )
+
+    return True
 
 
 @require_POST
@@ -190,7 +249,6 @@ def submit_quiz(request):
     email_sent = False
     email_error = False
 
-    # Save every attempt, whether pass or fail.
     attempt = QuizAttempt.objects.create(
         name=name,
         email=email,
@@ -206,51 +264,19 @@ def submit_quiz(request):
             name=name,
             email=email,
             mobile=mobile,
-            score=score
+            score=score,
         )
 
         try:
-            pdf_response = generate_certificate_pdf(
-                certificate, request
+            send_certificate_email(
+                certificate,
+                request,
+                total,
             )
 
-            email_message = EmailMessage(
-                subject="Your Python Quiz Certificate",
-                body=(
-                    f"Hello {name},\n\n"
-                    "Congratulations! You have passed "
-                    "the Python Quiz.\n"
-                    f"Your score is {score}/{total}.\n"
-                    "Your certificate PDF is attached "
-                    "to this email.\n\n"
-                    "Thank you!"
-                ),
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                to=[email],
-            )
-
-            email_message.attach(
-                f"certificate_{certificate.certificate_id}.pdf",
-                pdf_response.content,
-                "application/pdf",
-            )
-
-            sent_count = email_message.send(
-                fail_silently=False
-            )
-
-            email_sent = (sent_count == 1)
-
-            if email_sent:
-                attempt.email_sent = True
-                attempt.save(update_fields=['email_sent'])
-            else:
-                email_error = True
-                logger.error(
-                    "Certificate email was not accepted by "
-                    "the email backend. Attempt ID: %s",
-                    attempt.pk
-                )
+            email_sent = True
+            attempt.email_sent = True
+            attempt.save(update_fields=['email_sent'])
 
         except Exception:
             email_sent = False
@@ -258,7 +284,7 @@ def submit_quiz(request):
 
             logger.exception(
                 "Certificate email failed. Attempt ID: %s",
-                attempt.pk
+                attempt.pk,
             )
 
     return render(request, 'quiz/result.html', {
@@ -278,10 +304,7 @@ def download_certificate(request, certificate_id):
             certificate_id=certificate_id
         )
     except Certificate.DoesNotExist:
-        return HttpResponse(
-            "Certificate not found.",
-            status=404
-        )
+        return HttpResponse("Certificate not found.", status=404)
 
     return generate_certificate_pdf(certificate, request)
 
@@ -292,10 +315,7 @@ def verify_certificate(request, certificate_id):
             certificate_id=certificate_id
         )
     except Certificate.DoesNotExist:
-        return HttpResponse(
-            "Invalid certificate.",
-            status=404
-        )
+        return HttpResponse("Invalid certificate.", status=404)
 
     return render(request, 'quiz/verify_certificate.html', {
         'certificate': certificate
